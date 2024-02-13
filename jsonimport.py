@@ -17,18 +17,21 @@ def parse(text):
     toks = tokenize(text)
     toksIndex = 0
     tok = toks[toksIndex]
-    toksIndex += 1
-    def consume(self):
-        if self.index < len(self.tokens):
-            token = self.tokens[self.index]
-            self.index += 1
-            return token
+    
+
+    def consume(kind):
+        nonlocal tok, toks, toksIndex
+        #print(f"consuming {kind} at {tok}")
+        if (peek(kind)):
+            tok = toks[toksIndex]
+            toksIndex += 1
         else:
-            raise SyntaxError("Unexpected end of input")
+            error(kind, text)
+
         
     def peek(kind):
         nonlocal tok
-        return tok.kind == kind
+        return tok[0].kind == kind
 
 
 
@@ -44,7 +47,7 @@ def parse(text):
             asts.append(e)
             return parse_sentence(asts)
 
-    def parse_data_literal(self):
+    def parse_data_literal():
         if peek('['):
             op=tok.kind
             consume(op)
@@ -58,7 +61,7 @@ def parse(text):
             consume(op)
             p=parse_map_literal()
         else:
-            op=tok.kind
+            op=tok[0].kind
             consume(op)
             p=parse_primitive_literal()
         return p
@@ -98,13 +101,19 @@ def parse(text):
         return {"%k": "map", "%v":[m]}
 
     def parse_key_pair():
-        key = parse_data_literal()
-        if peek("=>"):
+        if peek(KEY):
             op=tok.kind
             consume(op)
-            value = parse_data_literal()
+            key = parse_key(op)
+            value=parse_data_literal()   
         else:
-            value = parse_data_literal()
+            key=parse_data_literal()   
+            if peek("=>"):
+                op=tok.kind
+                consume(op)
+                value = parse_data_literal()
+            else:
+                value = parse_data_literal()
         return [key, value]
 
     def parse_primitive_literal():
@@ -113,12 +122,12 @@ def parse(text):
             consume(op)
             v=int(tok.lexeme)
             return parse_int(v)
-        elif token.startswith(":"):
+        elif peek(ATOM):
             op=tok.kind
             consume(op)
             token=tok.lexeme
             return parse_atom(token)
-        elif token in ["true", "false"]:
+        elif peek(BOOL):
             op=tok.kind
             consume(op)
             b=bool(tok.lexeme)
@@ -131,6 +140,10 @@ def parse(text):
 
     def parse_atom(token):
         return {"%k": "atom", "%v": token}
+    
+    def parse_key(key):
+        
+        return {"%k": "key", "%v": key}
 
     def parse_bool(b):
         return {"%k": "bool", "%v": b}
