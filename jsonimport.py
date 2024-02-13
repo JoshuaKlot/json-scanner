@@ -5,18 +5,13 @@ import os
 from collections import namedtuple
 
 ######################PARSER##################################
-class JSONConverter:
-    def __init__(self, tokens):
-        self.tokens = tokens
-        self.index = 0
-
-
 
 
 def parse(text):
     toks = tokenize(text)
     toksIndex = 0
     tok = toks[toksIndex]
+    toksIndex += 1
     
 
     def consume(kind):
@@ -31,7 +26,8 @@ def parse(text):
         
     def peek(kind):
         nonlocal tok
-        return tok[0].kind == kind
+        print(tok)
+        return tok.kind == kind
 
 
 
@@ -61,7 +57,7 @@ def parse(text):
             consume(op)
             p=parse_map_literal()
         else:
-            op=tok[0].kind
+            op=tok.kind
             consume(op)
             p=parse_primitive_literal()
         return p
@@ -164,7 +160,7 @@ def parse(text):
         print('^'.rjust(nSpace+1), file=sys.stderr)
         sys.exit(1)
     
-    asts = [];
+    asts = []
     parse_sentence(asts)
     if tok.kind != 'EOF': error('EOF', text)
     return asts
@@ -242,7 +238,7 @@ def tokenize(text, pos=0):
 
 def main():
 
-    text = "1233"
+    text = "[12,34,64]"
     #print(tokenize(text))
     asts = parse(text)
     print(json.dumps(asts, separators=(',', ':'))) #no whitespace
