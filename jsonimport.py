@@ -11,6 +11,7 @@ def parse(text):
     toks = tokenize(text)
     toksIndex = 0
     tok = toks[toksIndex]
+    print(toks)
     toksIndex += 1
     
 
@@ -44,7 +45,7 @@ def parse(text):
             return parse_sentence(asts)
 
     def parse_data_literal():
-        if peek('['):
+        if peek('LEFT_SQUARE'):
             op=tok.kind
             consume(op)
             p=parse_list_literal()
@@ -64,12 +65,12 @@ def parse(text):
 
     def parse_list_literal():
         l=[]
-        while not peek("]"):
-            if peek(","):
-                op=tok.kind
-                consume(op)
-            p=parse_data_literal()
-            l.append(p)
+        while not peek("RIGHT_SQUARE"):
+            if peek("COMMA"):
+                consume("COMMA")
+            else:
+                p=parse_data_literal()
+                l.append(p)
 
         return {"%k": "list", "%v":[l]}
 
@@ -129,7 +130,7 @@ def parse(text):
             b=bool(tok.lexeme)
             return parse_bool(b)
         else:
-            raise SyntaxError(f"Unexpected token: {token}")
+            raise SyntaxError(f"Unexpected token: {tok.lexeme}")
 
     def parse_int(value):
         return {"%k": "int", "%v": value}
@@ -191,54 +192,52 @@ def tokenize(text, pos=0):
         if pos >= len(text):
             break
         if m := LEFT_SQUARE.match(text, pos):
-            toks.append(Token('LEFT_SQUARE', m.group(), pos))
-            pos += len(m.group())
-            inner_tokens, pos = tokenize(text, pos)
-            toks.extend(inner_tokens)
+            tok=(Token('LEFT_SQUARE', m.group(), pos))
+            
         elif m := RIGHT_SQUARE.match(text, pos):
-            toks.append(Token('RIGHT_SQUARE', m.group(), pos))
-            pos += len(m.group())
-            break
+            tok=(Token('RIGHT_SQUARE', m.group(), pos))
+            
         elif m := ATOM.match(text, pos):
-            toks.append(Token('ATOM', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('ATOM', m.group(), pos))
+            
         elif m := COMMA.match(text, pos):
-            toks.append(Token('COMMA', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('COMMA', m.group(), pos))
+            
         elif m := COLON.match(text, pos):
-            toks.append(Token('COLON', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('COLON', m.group(), pos))
+            
         elif m := LEFT_CURLY.match(text, pos):
-            toks.append(Token('LEFT_CURLY', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('LEFT_CURLY', m.group(), pos))
+            
         elif m := RIGHT_CURLY.match(text, pos):
-            toks.append(Token('RIGHT_CURLY', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('RIGHT_CURLY', m.group(), pos))
+            
         elif m := LEFT_PERCENT_CURLY.match(text, pos):
-            toks.append(Token('LEFT_PERCENT_CURLY', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('LEFT_PERCENT_CURLY', m.group(), pos))
+            
         elif m := ARROW.match(text, pos):
-            toks.append(Token('ARROW', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('ARROW', m.group(), pos))
+            
         elif m := BOOL.match(text, pos):
-            toks.append(Token('BOOL', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('BOOL', m.group(), pos))
+            
         elif m := KEY.match(text, pos):
-            toks.append(Token('KEY', m.group(), pos))
-            pos += len(m.group())
+            tok=(Token('KEY', m.group(), pos))
+            
         elif m := INT_RE.match(text, pos):
-            toks.append(Token('INT', m.group(), pos))
-            pos += len(m.group())
-                
-
+            tok=(Token('INT', m.group(), pos))
+            
         else:
             raise ValueError(f"Invalid character at position {pos}: {text[pos:]}")
-    return toks, pos
+        toks.append(tok)
+        pos += len(m.group())
+    toks.append(Token('EOF', '<EOF>', pos))
+    return toks
     #########################################################################
 
 def main():
 
-    text = "[12,34,64]"
+    text = "[12]"
     #print(tokenize(text))
     asts = parse(text)
     print(json.dumps(asts, separators=(',', ':'))) #no whitespace
