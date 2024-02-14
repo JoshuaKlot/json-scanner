@@ -163,7 +163,7 @@ def parse(text):
 
     ############################LEXER#######################################
 SKIP_RE = re.compile(r'(( |\t)|\#.*)+')
-INT_RE = re.compile(r'\d+')
+INT_RE = re.compile(r'\d+(?:_\d+)*')  
 LEFT_SQUARE = re.compile(r'\[')
 RIGHT_SQUARE = re.compile(r'\]')
 COLON = re.compile(r':')
@@ -232,7 +232,7 @@ def tokenize(text, pos=0):
 
 def main():
 
-    text = "[12,78,:fuckyou,{true,:shit}]"
+    text = "[12,7_8,:fuck_you,{true,:shit}]"
     #print(tokenize(text))
     asts = parse(text)
     print(json.dumps(asts, separators=(',', ':'))) #no whitespace
