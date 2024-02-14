@@ -27,7 +27,6 @@ def parse(text):
         
     def peek(kind):
         nonlocal tok
-        print(tok)
         return tok.kind == kind
 
 
@@ -49,63 +48,60 @@ def parse(text):
             op=tok.kind
             consume(op)
             p=parse_list_literal()
-        elif peek('{'):
+        elif peek('LEFT_CURLY'):
             op=tok.kind
             consume(op)
             p=parse_tuple_literal()
-        elif peek("%{"):
+        elif peek('LEFT_PERCENT_CURLY'):
             op=tok.kind
             consume(op)
             p=parse_map_literal()
         else:
-            op=tok.kind
-            consume(op)
             p=parse_primitive_literal()
         return p
 
     def parse_list_literal():
         l=[]
-        while not peek("RIGHT_SQUARE"):
-            if peek("COMMA"):
-                consume("COMMA")
+        while not peek('RIGHT_SQUARE'):
+            if peek('COMMA'):
+                consume('COMMA')
             else:
                 p=parse_data_literal()
                 l.append(p)
-
+        consume('RIGHT_SQUARE')
         return {"%k": "list", "%v":[l]}
 
     def parse_tuple_literal():
         l=[]
-        while not peek("}"):
-            if peek(","):
-                op=tok.kind
-                consume(op)
-            p=parse_data_literal()
-            l.append(p)
-
-
+        while not peek('RIGHT_CURLY'):
+            if peek('COMMA'):
+                consume('COMMA')
+            else:
+                p=parse_data_literal()
+                l.append(p)
+        consume('RIGHT_CURLY')
         return {"%k": "truple", "%v":[l]}
 
     def parse_map_literal():
         m=[]
-        while not peek("}"):
-            if peek(","):
-                op=tok.kind
-                consume(op)
-            p=parse_key_pair()
-            m.append(p)
-        
+        while not peek('RIGHT_CURLY'):
+            if peek('COMMA'):
+                consume('COMMA')
+            else:
+                p=parse_key_pair()
+                m.append(p)
+        consume('RIGHT_CURLY')
         return {"%k": "map", "%v":[m]}
 
     def parse_key_pair():
-        if peek(KEY):
+        if peek('KEY'):
             op=tok.kind
             consume(op)
             key = parse_key(op)
             value=parse_data_literal()   
         else:
             key=parse_data_literal()   
-            if peek("=>"):
+            if peek('ARROW'):
                 op=tok.kind
                 consume(op)
                 value = parse_data_literal()
@@ -114,20 +110,19 @@ def parse(text):
         return [key, value]
 
     def parse_primitive_literal():
-        if peek(INT_RE):
-            op=tok.kind
-            consume(op)
+        if peek('INT_RE'):
+            
             v=int(tok.lexeme)
+            consume('INT_RE')
             return parse_int(v)
-        elif peek(ATOM):
-            op=tok.kind
-            consume(op)
+        elif peek('ATOM'):
             token=tok.lexeme
+            consume('ATOM')
+            
             return parse_atom(token)
-        elif peek(BOOL):
-            op=tok.kind
-            consume(op)
+        elif peek('BOOL'):
             b=bool(tok.lexeme)
+            consume('BOOL')
             return parse_bool(b)
         else:
             raise SyntaxError(f"Unexpected token: {tok.lexeme}")
@@ -225,7 +220,7 @@ def tokenize(text, pos=0):
             tok=(Token('KEY', m.group(), pos))
             
         elif m := INT_RE.match(text, pos):
-            tok=(Token('INT', m.group(), pos))
+            tok=(Token('INT_RE', m.group(), pos))
             
         else:
             raise ValueError(f"Invalid character at position {pos}: {text[pos:]}")
@@ -237,7 +232,7 @@ def tokenize(text, pos=0):
 
 def main():
 
-    text = "[12]"
+    text = "[12,78,:fuckyou,[true,:shitballs]]"
     #print(tokenize(text))
     asts = parse(text)
     print(json.dumps(asts, separators=(',', ':'))) #no whitespace
