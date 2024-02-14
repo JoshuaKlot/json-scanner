@@ -232,7 +232,7 @@ def tokenize(text, pos=0):
 
 def main():
 
-    text = "[12,78,:fuckyou,[true,:shitballs]]"
+    text = "[12,78,:fuckyou,{true,:shit}]"
     #print(tokenize(text))
     asts = parse(text)
     print(json.dumps(asts, separators=(',', ':'))) #no whitespace
